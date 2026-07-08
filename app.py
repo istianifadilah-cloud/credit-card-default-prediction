@@ -56,15 +56,159 @@ model = build_and_train_model()
 # ==========================================
 # TAMPILAN ANTARMUKA WEB STREAMLIT
 # ==========================================
-st.set_page_config(page_title="Credit Card Default Prediction", page_icon="💳")
-st.title("💳 Credit Card Default Prediction App")
-st.write("Aplikasi Prediksi Potensi Gagal Bayar Nasabah Bulan Depan.")
+st.set_page_config(page_title="Credit Card Default Prediction", page_icon=None, layout="centered")
+
+# ------------------------------------------
+# CUSTOM CSS - TEMA PINK
+# ------------------------------------------
+st.markdown("""
+<style>
+/* Background utama */
+.stApp {
+    background: linear-gradient(180deg, #fff0f6 0%, #ffe3ee 100%);
+}
+
+/* Judul utama */
+.title-box {
+    background: linear-gradient(135deg, #ff6fa5, #ff9ec4);
+    padding: 28px 24px;
+    border-radius: 18px;
+    box-shadow: 0 8px 20px rgba(255, 111, 165, 0.35);
+    margin-bottom: 20px;
+    text-align: center;
+}
+.title-box h1 {
+    color: white;
+    font-size: 30px;
+    margin-bottom: 6px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+}
+.title-box p {
+    color: #fff0f6;
+    font-size: 15px;
+    margin: 0;
+}
+
+/* Sidebar */
+section[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #ffdcec 0%, #ffc9e1 100%);
+    border-right: 3px solid #ff6fa5;
+}
+section[data-testid="stSidebar"] h1,
+section[data-testid="stSidebar"] h2,
+section[data-testid="stSidebar"] label {
+    color: #c2185b !important;
+    font-weight: 700 !important;
+}
+
+/* Tombol prediksi */
+div.stButton > button {
+    background: linear-gradient(135deg, #ff4d94, #ff85b3);
+    color: white;
+    font-weight: 700;
+    border: none;
+    border-radius: 30px;
+    padding: 12px 26px;
+    width: 100%;
+    box-shadow: 0 6px 14px rgba(255, 77, 148, 0.4);
+    transition: 0.25s ease;
+}
+div.stButton > button:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 10px 20px rgba(255, 77, 148, 0.5);
+}
+
+/* Subheader hasil */
+.result-header {
+    color: #c2185b;
+    font-weight: 800;
+    font-size: 22px;
+    margin: 18px 0 10px 0;
+    border-left: 6px solid #ff6fa5;
+    padding-left: 10px;
+}
+
+/* Kartu hasil */
+.result-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 20px;
+    border-radius: 16px;
+    margin-top: 8px;
+    font-size: 16px;
+    font-weight: 600;
+}
+.result-card.danger {
+    background: #fff0f4;
+    border: 2px solid #ff4d6d;
+    color: #b3123c;
+}
+.result-card.safe {
+    background: #f1fff6;
+    border: 2px solid #33c481;
+    color: #1a7a4d;
+}
+
+/* Ikon segitiga peringatan */
+.icon-warning {
+    width: 0;
+    height: 0;
+    border-left: 16px solid transparent;
+    border-right: 16px solid transparent;
+    border-bottom: 28px solid #ff4d6d;
+    position: relative;
+    flex-shrink: 0;
+}
+.icon-warning::after {
+    content: "!";
+    position: absolute;
+    top: 10px;
+    left: -4px;
+    color: white;
+    font-weight: 900;
+    font-size: 13px;
+}
+
+/* Ikon centang (checkmark) dari border */
+.icon-check {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #33c481;
+    position: relative;
+    flex-shrink: 0;
+}
+.icon-check::after {
+    content: "";
+    position: absolute;
+    left: 9px;
+    top: 5px;
+    width: 7px;
+    height: 12px;
+    border: solid white;
+    border-width: 0 3px 3px 0;
+    transform: rotate(45deg);
+}
+</style>
+""", unsafe_allow_html=True)
+
+# ------------------------------------------
+# HEADER
+# ------------------------------------------
+st.markdown("""
+<div class="title-box">
+    <h1>Credit Card Default Prediction</h1>
+    <p>Aplikasi Prediksi Potensi Gagal Bayar Nasabah Bulan Depan</p>
+</div>
+""", unsafe_allow_html=True)
 
 st.sidebar.header("Input Parameter Nasabah")
 
 # Pembuatan komponen Form Input di Sidebar kiri
 limit_bal = st.sidebar.number_input("Limit Kredit (LIMIT_BAL)", min_value=0, value=50000)
-sex = st.sidebar.selectbox("Jenis Kelamin (SEX)", options=[1, 2], format_func=lambda x: "Pria" if x==1 else "Wanita")
+sex = st.sidebar.selectbox("Jenis Kelamin (SEX)", options=[1, 2], format_func=lambda x: "Pria" if x == 1 else "Wanita")
 education = st.sidebar.selectbox("Pendidikan (EDUCATION)", options=[1, 2, 3, 4], format_func=lambda x: ["Graduate School", "University", "High School", "Others"][x-1])
 marriage = st.sidebar.selectbox("Status Pernikahan (MARRIAGE)", options=[1, 2, 3], format_func=lambda x: ["Menikah", "Lajang", "Lainnya"][x-1])
 age = st.sidebar.slider("Usia (AGE)", 18, 100, 30)
@@ -79,12 +223,23 @@ if st.button("Prediksi Kemungkinan Gagal Bayar"):
         'BILL_AMT1': [0], 'BILL_AMT2': [0], 'BILL_AMT3': [0], 'BILL_AMT4': [0], 'BILL_AMT5': [0], 'BILL_AMT6': [0],
         'PAY_AMT1': [0], 'PAY_AMT2': [0], 'PAY_AMT3': [0], 'PAY_AMT4': [0], 'PAY_AMT5': [0], 'PAY_AMT6': [0]
     })
-    
+
     # Prediksi menggunakan pipeline yang sudah di-training otomatis tadi
     prediksi = model.predict(data_baru)[0]
-    
-    st.subheader("Hasil Analisis Real-Time:")
+
+    st.markdown('<div class="result-header">Hasil Analisis Real-Time</div>', unsafe_allow_html=True)
+
     if prediksi == 1:
-        st.error("⚠️ Peringatan: Nasabah berpotensi GAGAL BAYAR (*Default*) bulan depan!")
+        st.markdown("""
+        <div class="result-card danger">
+            <div class="icon-warning"></div>
+            <div>Peringatan: Nasabah berpotensi <b>GAGAL BAYAR (Default)</b> bulan depan!</div>
+        </div>
+        """, unsafe_allow_html=True)
     else:
-        st.success("✅ Aman: Nasabah diprediksi akan membayar tagihan dengan lancar (*Tidak Default*).")
+        st.markdown("""
+        <div class="result-card safe">
+            <div class="icon-check"></div>
+            <div>Aman: Nasabah diprediksi akan membayar tagihan dengan lancar <b>(Tidak Default)</b>.</div>
+        </div>
+        """, unsafe_allow_html=True)
